@@ -70,6 +70,8 @@ export async function install(
   }
 
   const verify = options.verifyChecksum ?? true
+  // `install-dir` points at the host file system, so it is resolved with the
+  // host's path rules. `platform` only decides whether JOM can be installed.
   const installDir = resolveInstallDir(
     options.installDir ?? '',
     options.workspace

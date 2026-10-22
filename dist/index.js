@@ -33650,17 +33650,22 @@ function compareVersions(left, right) {
  *
  * An empty input selects {@link DEFAULT_INSTALL_DIR}; relative paths are
  * resolved against the workspace so `install-dir: jom` ends up inside the
- * checked out repository instead of somewhere in the runner profile. Windows
- * paths keep their separators, POSIX paths are only kept so the helpers stay
- * usable outside a Windows runner (for example in the unit tests).
+ * checked out repository instead of somewhere in the runner profile.
+ *
+ * The path style follows `platform` rather than the host: `path.win32` treats
+ * `/tmp/jom` as rooted (it would turn it into `\tmp\jom`), so a POSIX path can
+ * only be handled with the POSIX flavour of the helpers.
  */
-function resolveInstallDir(input = '', workspace = process.env.GITHUB_WORKSPACE ?? process.cwd()) {
+function resolveInstallDir(input = '', workspace = process.env.GITHUB_WORKSPACE ?? process.cwd(), platform = process.platform) {
     const directory = input.trim() || DEFAULT_INSTALL_DIR;
-    if (path$1.win32.isAbsolute(directory))
-        return path$1.win32.normalize(directory);
-    if (path$1.posix.isAbsolute(directory))
-        return path$1.posix.normalize(directory);
-    return path$1.resolve(workspace, directory);
+    if (isWindows(platform)) {
+        return path$1.win32.isAbsolute(directory)
+            ? path$1.win32.normalize(directory)
+            : path$1.win32.resolve(workspace, directory);
+    }
+    return path$1.posix.isAbsolute(directory)
+        ? path$1.posix.normalize(directory)
+        : path$1.posix.resolve(workspace, directory);
 }
 /** Absolute path of the `jom.exe` inside the installation directory. */
 function jomExecutable(installDir) {
@@ -33711,6 +33716,8 @@ async function install(options = {}) {
         throw new Error(`JOM can only be installed on Windows, but the runner platform is "${platform}".`);
     }
     const verify = options.verifyChecksum ?? true;
+    // `install-dir` points at the host file system, so it is resolved with the
+    // host's path rules. `platform` only decides whether JOM can be installed.
     const installDir = resolveInstallDir(options.installDir ?? '', options.workspace);
     let release = resolveRelease(options.version ?? '');
     // Downloads go into a directory owned by this step. The archive keeps its

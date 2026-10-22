@@ -138,21 +138,37 @@ describe('jom.ts', () => {
   })
 
   describe('resolveInstallDir', () => {
-    it('defaults to C:\\jom', () => {
-      expect(resolveInstallDir('', 'D:\\a\\repo\\repo')).toBe(
-        DEFAULT_INSTALL_DIR
-      )
+    it('defaults to C:\\jom on Windows', () => {
       expect(DEFAULT_INSTALL_DIR).toBe('C:\\jom')
+      expect(resolveInstallDir('', 'D:\\a\\repo\\repo', 'win32')).toBe(
+        'C:\\jom'
+      )
     })
 
-    it('keeps absolute paths and normalises separators', () => {
-      expect(resolveInstallDir('C:/tools/jom')).toBe('C:\\tools\\jom')
-      expect(resolveInstallDir(' D:\\Qt\\jom ')).toBe('D:\\Qt\\jom')
+    it('keeps absolute Windows paths and normalises separators', () => {
+      expect(resolveInstallDir('C:/tools/jom', '', 'win32')).toBe(
+        'C:\\tools\\jom'
+      )
+      expect(resolveInstallDir(' D:\\Qt\\jom ', '', 'win32')).toBe(
+        'D:\\Qt\\jom'
+      )
+      expect(resolveInstallDir('\\\\server\\share\\jom', '', 'win32')).toBe(
+        '\\\\server\\share\\jom'
+      )
     })
 
-    it('resolves relative paths against the workspace', () => {
-      expect(resolveInstallDir('jom', 'D:\\a\\repo\\repo')).toBe(
+    it('resolves relative paths against the workspace on Windows', () => {
+      expect(resolveInstallDir('jom', 'D:\\a\\repo\\repo', 'win32')).toBe(
         'D:\\a\\repo\\repo\\jom'
+      )
+    })
+
+    it('keeps POSIX paths intact on other hosts', () => {
+      expect(resolveInstallDir('/opt/jom', '/workspace', 'linux')).toBe(
+        '/opt/jom'
+      )
+      expect(resolveInstallDir('jom', '/workspace', 'linux')).toBe(
+        '/workspace/jom'
       )
     })
   })

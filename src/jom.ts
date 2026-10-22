@@ -148,20 +148,28 @@ function compareVersions(left: string[], right: string[]): number {
  *
  * An empty input selects {@link DEFAULT_INSTALL_DIR}; relative paths are
  * resolved against the workspace so `install-dir: jom` ends up inside the
- * checked out repository instead of somewhere in the runner profile. Windows
- * paths keep their separators, POSIX paths are only kept so the helpers stay
- * usable outside a Windows runner (for example in the unit tests).
+ * checked out repository instead of somewhere in the runner profile.
+ *
+ * The path style follows `platform` rather than the host: `path.win32` treats
+ * `/tmp/jom` as rooted (it would turn it into `\tmp\jom`), so a POSIX path can
+ * only be handled with the POSIX flavour of the helpers.
  */
 export function resolveInstallDir(
   input: string = '',
-  workspace: string = process.env.GITHUB_WORKSPACE ?? process.cwd()
+  workspace: string = process.env.GITHUB_WORKSPACE ?? process.cwd(),
+  platform: string = process.platform
 ): string {
   const directory = input.trim() || DEFAULT_INSTALL_DIR
 
-  if (path.win32.isAbsolute(directory)) return path.win32.normalize(directory)
-  if (path.posix.isAbsolute(directory)) return path.posix.normalize(directory)
+  if (isWindows(platform)) {
+    return path.win32.isAbsolute(directory)
+      ? path.win32.normalize(directory)
+      : path.win32.resolve(workspace, directory)
+  }
 
-  return path.resolve(workspace, directory)
+  return path.posix.isAbsolute(directory)
+    ? path.posix.normalize(directory)
+    : path.posix.resolve(workspace, directory)
 }
 
 /** Absolute path of the `jom.exe` inside the installation directory. */
