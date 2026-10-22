@@ -1,305 +1,155 @@
-# Create a GitHub Action Using TypeScript
+# Setup JOM
 
-![Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)
-![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
-![Check dist/](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml/badge.svg)
-![CodeQL](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml/badge.svg)
+![Linter](https://github.com/RealChuan/setup-jom/actions/workflows/linter.yml/badge.svg)
+![CI](https://github.com/RealChuan/setup-jom/actions/workflows/ci.yml/badge.svg)
+![Check dist/](https://github.com/RealChuan/setup-jom/actions/workflows/check-dist.yml/badge.svg)
 ![Coverage](./badges/coverage.svg)
 
-Use this template to bootstrap the creation of a TypeScript action. :rocket:
+在 GitHub Actions 的 Windows 运行器上安装
+[JOM](https://wiki.qt.io/Jom)。JOM 是 Qt 提供的并行 `make`
+替代品，在编译 Qt 项目时比 `nmake` 快很多。
 
-This template includes compilation support, tests, a validation workflow,
-publishing, and versioning guidance.
+## 安装位置
 
-If you are new, there's also a simpler introduction in the
-[Hello world JavaScript action repository](https://github.com/actions/hello-world-javascript-action).
+| 平台    | 默认目录 | 可执行文件       |
+| ------- | -------- | ---------------- |
+| Windows | `C:\jom` | `C:\jom\jom.exe` |
+| 其他    | 不安装   | -                |
 
-## Create Your Own Action
+JOM 只有 Windows 版本。在 Linux 和 macOS 运行器上，Action 会输出一条警告并跳过安装，不会让整个工作流失败，因此可以直接放进
+`matrix` 构建。
 
-To create your own action, you can use this repository as a template! Just
-follow the below instructions:
+安装完成后，Action 会：
 
-1. Click the **Use this template** button at the top of the repository
-1. Select **Create a new repository**
-1. Select an owner and name for your new repository
-1. Click **Create repository**
-1. Clone your new repository
+- 把安装目录加入后续步骤的 `PATH`（可用 `add-to-path: false` 关闭）
+- 输出 `jom-path`、`jom-executable`、`jom-version` 和 `jom-skipped`
 
-> [!IMPORTANT]
->
-> Make sure to remove or update the [`CODEOWNERS`](./CODEOWNERS) file! For
-> details on how to use this file, see
-> [About code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
-
-## Initial Setup
-
-After you've cloned the repository to your local machine or codespace, you'll
-need to perform some initial setup steps before you can develop your action.
-
-> [!NOTE]
->
-> You'll need to have a reasonably modern version of
-> [Node.js](https://nodejs.org) handy (20.x or later should work!). If you are
-> using a version manager like [`nodenv`](https://github.com/nodenv/nodenv) or
-> [`fnm`](https://github.com/Schniz/fnm), this template has a `.node-version`
-> file at the root of the repository that can be used to automatically switch to
-> the correct version when you `cd` into the repository. Additionally, this
-> `.node-version` file is used by GitHub Actions in any `actions/setup-node`
-> actions.
-
-1. :hammer_and_wrench: Install the dependencies
-
-   ```bash
-   npm install
-   ```
-
-1. :building_construction: Package the TypeScript for distribution
-
-   ```bash
-   npm run bundle
-   ```
-
-1. :white_check_mark: Run the tests
-
-   ```bash
-   $ npm test
-
-   PASS  ./index.test.js
-     ✓ throws invalid number (3ms)
-     ✓ wait 500 ms (504ms)
-     ✓ test runs (95ms)
-
-   ...
-   ```
-
-## Update the Action Metadata
-
-The [`action.yml`](action.yml) file defines metadata about your action, such as
-input(s) and output(s). For details about this file, see
-[Metadata syntax for GitHub Actions](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions).
-
-When you copy this repository, update `action.yml` with the name, description,
-inputs, and outputs for your action.
-
-## Update the Action Code
-
-The [`src/`](./src/) directory is the heart of your action! This contains the
-source code that will be run when your action is invoked. You can replace the
-contents of this directory with your own code.
-
-There are a few things to keep in mind when writing your action code:
-
-- Most GitHub Actions toolkit and CI/CD operations are processed asynchronously.
-  In `main.ts`, you will see that the action is run in an `async` function.
-
-  ```javascript
-  import * as core from '@actions/core'
-  //...
-
-  async function run() {
-    try {
-      //...
-    } catch (error) {
-      core.setFailed(error.message)
-    }
-  }
-  ```
-
-  For more information about the GitHub Actions toolkit, see the
-  [documentation](https://github.com/actions/toolkit/blob/main/README.md).
-
-So, what are you waiting for? Go ahead and start customizing your action!
-
-1. Create a new branch
-
-   ```bash
-   git checkout -b releases/v1
-   ```
-
-1. Replace the contents of `src/` with your action code
-1. Add tests to `__tests__/` for your source code
-1. Format, test, and build the action
-
-   ```bash
-   npm run all
-   ```
-
-   > This step is important! It will run [`rollup`](https://rollupjs.org/) to
-   > build the final JavaScript action code with all dependencies included. If
-   > you do not run this step, your action will not work correctly when it is
-   > used in a workflow.
-
-1. (Optional) Test your action locally
-
-   The [`@github/local-action`](https://github.com/github/local-action) utility
-   can be used to test your action locally. It is a simple command-line tool
-   that "stubs" (or simulates) the GitHub Actions Toolkit. This way, you can run
-   your TypeScript action locally without having to commit and push your changes
-   to a repository.
-
-   The `local-action` utility can be run in the following ways:
-   - Visual Studio Code Debugger
-
-     Make sure to review and, if needed, update
-     [`.vscode/launch.json`](./.vscode/launch.json)
-
-   - Terminal/Command Prompt
-
-     ```bash
-     # npx @github/local action <action-yaml-path> <entrypoint> <dotenv-file>
-     npx @github/local-action . src/main.ts .env
-     ```
-
-   You can provide a `.env` file to the `local-action` CLI to set environment
-   variables used by the GitHub Actions Toolkit. For example, setting inputs and
-   event payload data used by your action. For more information, see the example
-   file, [`.env.example`](./.env.example), and the
-   [GitHub Actions Documentation](https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables).
-
-1. Commit your changes
-
-   ```bash
-   git add .
-   git commit -m "My first action is ready!"
-   ```
-
-1. Push them to your repository
-
-   ```bash
-   git push -u origin releases/v1
-   ```
-
-1. Create a pull request and get feedback on your action
-1. Merge the pull request into the `main` branch
-
-Your action is now published! :rocket:
-
-For information about versioning your action, see
-[Versioning](https://github.com/actions/toolkit/blob/main/docs/action-versioning.md)
-in the GitHub Actions toolkit.
-
-## Validate the Action
-
-You can now validate the action by referencing it in a workflow file. For
-example, [`ci.yml`](./.github/workflows/ci.yml) demonstrates how to reference an
-action in the same repository.
+## 快速开始
 
 ```yaml
-steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
+jobs:
+  build:
+    runs-on: windows-latest
 
-  - name: Test Local Action
-    id: test-action
-    uses: ./
-    with:
-      milliseconds: 1000
+    steps:
+      - uses: actions/checkout@v7
 
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
+      - name: Setup JOM
+        uses: RealChuan/setup-jom@main
+
+      - name: Show the installed version
+        run: jom /version
 ```
 
-For example workflow runs, check out the
-[Actions tab](https://github.com/actions/typescript-action/actions)! :rocket:
+## 输入参数
 
-## Usage
+| 参数              | 说明                                         | 必需 | 默认值   |
+| ----------------- | -------------------------------------------- | ---- | -------- |
+| `jom-version`     | `latest` 或完整版本号，例如 `1.1.7`、`1_1_7` | 否   | `latest` |
+| `install-dir`     | 安装目录，留空则使用 `C:\jom`                | 否   | `''`     |
+| `clean`           | 解压前删除已存在的安装目录                   | 否   | `true`   |
+| `verify-checksum` | 用官方 `md5sums.txt` 校验下载的文件          | 否   | `true`   |
+| `add-to-path`     | 把安装目录加入后续步骤的 `PATH`              | 否   | `true`   |
 
-After testing, you can create version tag(s) that developers can use to
-reference different stable versions of your action. For more information, see
-[Versioning](https://github.com/actions/toolkit/blob/main/docs/action-versioning.md)
-in the GitHub Actions toolkit.
+## 输出参数
 
-To include the action in a workflow in another repository, you can use the
-`uses` syntax with the `@` symbol to reference a specific branch, tag, or commit
-hash.
+| 参数             | 说明                              |
+| ---------------- | --------------------------------- |
+| `jom-path`       | JOM 的安装目录，非 Windows 时为空 |
+| `jom-executable` | `jom.exe` 的完整路径              |
+| `jom-version`    | 安装的 JOM 版本，例如 `1.1.7`     |
+| `jom-skipped`    | 是否因为运行器不是 Windows 而跳过 |
+
+## 使用示例
+
+### 固定 JOM 版本
+
+`latest` 会从官方 `md5sums.txt`
+里挑出最新的版本号，再下载对应的版本化压缩包。需要可复现的构建时，把版本固定下来，Action会下载对应的
+`jom_1_1_7.zip`：
 
 ```yaml
+- name: Setup JOM
+  uses: RealChuan/setup-jom@main
+  with:
+    jom-version: 1.1.7
+```
+
+版本必须是完整的三段式版本号，`1.1` 这种写法会直接报错，避免猜错补丁版本。
+
+### 安装到自定义目录
+
+```yaml
+- name: Setup JOM
+  id: setup-jom
+  uses: RealChuan/setup-jom@main
+  with:
+    install-dir: ${{ runner.temp }}\jom
+
+- name: Use the installation
+  run: echo "${{ steps.setup-jom.outputs.jom-executable }}"
+```
+
+相对路径会相对于工作区解析，例如 `install-dir: tools/jom` 会安装到
+`${{ github.workspace }}\tools\jom`。
+
+### 矩阵构建
+
+```yaml
+strategy:
+  matrix:
+    os: [windows-latest, ubuntu-latest, macos-latest]
+
 steps:
-  - name: Checkout
-    id: checkout
-    uses: actions/checkout@v4
+  - uses: actions/checkout@v7
 
-  - name: Test Local Action
-    id: test-action
-    uses: actions/typescript-action@v1 # Commit with the `v1` tag
-    with:
-      milliseconds: 1000
+  - name: Setup JOM
+    id: setup-jom
+    uses: RealChuan/setup-jom@main
 
-  - name: Print Output
-    id: output
-    run: echo "${{ steps.test-action.outputs.time }}"
+  - if: runner.os == 'Windows'
+    run: jom /version
 ```
 
-## Publishing a New Release
+非 Windows 运行器上 `jom-skipped` 为 `true`，可以据此决定后续步骤是否执行。
 
-This project includes a helper script, [`script/release`](./script/release)
-designed to streamline the process of tagging and pushing new releases for
-GitHub Actions.
+## 说明
 
-GitHub Actions allows users to select a specific version of the action to use,
-based on release tags. This script simplifies this process by performing the
-following steps:
+- **校验和**：默认下载官方 `md5sums.txt`
+  并校验压缩包。校验和文件本身下载失败、或其中没有对应条目时只会警告；哈希不匹配则会失败，说明下载已损坏。
+- **`clean`**：默认 `true`，会先删除整个 `install-dir`
+  再解压。请给 JOM 一个专用目录，不要在 `install-dir` 里放其他文件。设为 `false`
+  时会复用目录，压缩包内容直接覆盖同名文件。
+- **`latest` 的含义**：`latest` 不使用官方的 `jom.zip`
+  别名，因为该别名在官方服务器上可能滞后（实测 `jom.zip` 的内容仍是 1.1.6，而
+  `md5sums.txt` 已标注为 1.1.7，两者哈希不一致）。Action 改为解析 `md5sums.txt`
+  中的版本化归档并取最高版本，因此 `jom-version` 输出的是真实版本号，而不是
+  `latest`。同一份工作流在官方发布新版本后仍可能拿到不同的 JOM 版本；需要可复现时请固定版本号。
+- **不做缓存**：JOM 压缩包约 1.7 MB，从 `download.qt.io`
+  下载通常只需要一两秒，缓存收益很小，反而容易留下不完整的安装目录。
+- **`PATH` 作用范围**：`core.addPath`
+  只影响当前工作流后续的步骤，不会修改运行器的全局环境变量。
 
-1. **Retrieving the latest release tag:** The script starts by fetching the most
-   recent SemVer release tag of the current branch, by looking at the local data
-   available in your repository.
-1. **Prompting for a new release tag:** The user is then prompted to enter a new
-   release tag. To assist with this, the script displays the tag retrieved in
-   the previous step, and validates the format of the inputted tag (vX.X.X). The
-   user is also reminded to update the version field in package.json.
-1. **Tagging the new release:** The script then tags a new release and syncs the
-   separate major tag (e.g. v1, v2) with the new release tag (e.g. v1.0.0,
-   v2.1.2). When the user is creating a new major release, the script
-   auto-detects this and creates a `releases/v#` branch for the previous major
-   version.
-1. **Pushing changes to remote:** Finally, the script pushes the necessary
-   commits, tags and branches to the remote repository. From here, you will need
-   to create a new release in GitHub so users can easily reference the new tags
-   in their workflows.
-
-## Dependency License Management
-
-This template includes a GitHub Actions workflow,
-[`licensed.yml`](./.github/workflows/licensed.yml), that uses
-[Licensed](https://github.com/licensee/licensed) to check for dependencies with
-missing or non-compliant licenses. This workflow is initially disabled. To
-enable the workflow, follow the below steps.
-
-1. Open [`licensed.yml`](./.github/workflows/licensed.yml)
-1. Uncomment the following lines:
-
-   ```yaml
-   # pull_request:
-   #   branches:
-   #     - main
-   # push:
-   #   branches:
-   #     - main
-   ```
-
-1. Save and commit the changes
-
-Once complete, this workflow will run any time a pull request is created or
-changes pushed directly to `main`. If the workflow detects any dependencies with
-missing or non-compliant licenses, it will fail the workflow and provide details
-on the issue(s) found.
-
-### Updating Licenses
-
-Whenever you install or update dependencies, you can use the Licensed CLI to
-update the licenses database. To install Licensed, see the project's
-[Readme](https://github.com/licensee/licensed?tab=readme-ov-file#installation).
-
-To update the cached licenses, run the following command:
+## 开发
 
 ```bash
-licensed cache
+npm install        # 安装依赖
+npm run all        # 格式化、lint、测试、更新覆盖率徽章、打包 dist/
 ```
 
-To check the status of cached licenses, run the following command:
+修改 `src/` 后必须重新打包并提交 `dist/index.js`，否则 Action 运行的还是旧代码。
 
-```bash
-licensed status
+单元测试在 Linux 上也能跑：安装流程通过 `platform` 参数注入平台，纯逻辑放在
+`src/jom.ts`，文件和网络操作集中在 `src/install.ts` 并被 mock。
+
+在 Windows 上本地联调可以执行：
+
+```powershell
+${env:INPUT_JOM-VERSION} = 'latest'
+${env:INPUT_INSTALL-DIR} = "$env:TEMP\jom"
+npm run local-action
 ```
+
+## 许可
+
+[MIT](./LICENSE)

@@ -46,6 +46,9 @@ export default [
 
       parserOptions: {
         projectService: {
+          // The template allows eight files outside of `tsconfig.json`. The
+          // action ships a few more fixtures and test files than that.
+          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 20,
           allowDefaultProject: [
             '__fixtures__/*.ts',
             '__tests__/*.ts',

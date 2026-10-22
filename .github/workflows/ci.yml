@@ -19,11 +19,11 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: npm
@@ -45,20 +45,81 @@ jobs:
         run: npm run ci-test
 
   test-action:
-    name: GitHub Actions Test
-    runs-on: ubuntu-latest
+    name: GitHub Actions Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
 
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
-      - name: Test Local Action
-        id: test-action
+      - name: Setup JOM
+        id: setup-jom
+        uses: ./
+
+      - name: Verify the installation
+        id: verify-install
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          jom /version
+
+          $skipped = '${{ steps.setup-jom.outputs.jom-skipped }}'
+          if ($skipped -ne 'false') {
+            throw "Expected jom-skipped to be false, got '$skipped'"
+          }
+
+          $path = '${{ steps.setup-jom.outputs.jom-path }}'
+          if ($path -ne 'C:\jom') {
+            throw "Expected jom-path to be C:\jom, got '$path'"
+          }
+
+          $exe = '${{ steps.setup-jom.outputs.jom-executable }}'
+          if (-not (Test-Path $exe)) {
+            throw "Missing jom.exe at '$exe'"
+          }
+
+      - name: Verify the skip on other platforms
+        id: verify-skip
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          skipped='${{ steps.setup-jom.outputs.jom-skipped }}'
+          echo "jom-skipped=$skipped"
+          test "$skipped" = "true"
+
+  test-custom-install:
+    name: GitHub Actions Test (custom install)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pinned JOM in a custom directory
+        id: setup-jom
         uses: ./
         with:
-          milliseconds: 2000
+          jom-version: 1.1.7
+          install-dir: ${{ runner.temp }}\jom
 
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+      - name: Verify the pinned installation
+        id: verify-custom
+        shell: pwsh
+        run: |
+          $exe = '${{ steps.setup-jom.outputs.jom-executable }}'
+          if (-not (Test-Path $exe)) {
+            throw "Missing jom.exe at '$exe'"
+          }
+
+          & $exe /version
+
+          $version = '${{ steps.setup-jom.outputs.jom-version }}'
+          if ($version -ne '1.1.7') {
+            throw "Expected JOM 1.1.7, got '$version'"
+          }

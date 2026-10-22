@@ -1,23 +1,52 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: Setup JOM
+description:
+  Install JOM on Windows runners. JOM is the parallel make replacement shipped
+  with Qt.
+author: RealChuan
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: package
+  color: blue
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
-    required: true
-    default: '1000'
+  jom-version:
+    description: >-
+      Version to install. Use "latest" for the newest stable release, or a full
+      version such as "1.1.7" (the 1_1_7 spelling is accepted as well).
+    required: false
+    default: latest
+  install-dir:
+    description: >-
+      Directory to install JOM into. Defaults to C:\jom. Relative paths are
+      resolved against the workspace.
+    required: false
+    default: ''
+  clean:
+    description: Remove an existing installation before extracting JOM.
+    required: false
+    default: 'true'
+  verify-checksum:
+    description: >-
+      Verify the downloaded archive against the official md5sums.txt. A missing
+      checksum only warns, a mismatch fails the step.
+    required: false
+    default: 'true'
+  add-to-path:
+    description: Add the installation directory to PATH for the following steps.
+    required: false
+    default: 'true'
 
-# Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  jom-path:
+    description: Directory JOM was installed into.
+  jom-executable:
+    description: Absolute path of jom.exe.
+  jom-version:
+    description: Version reported by the installed JOM.
+  jom-skipped:
+    description: >-
+      "true" when the installation was skipped because the runner is not
+      Windows.
 
 runs:
   using: node24
